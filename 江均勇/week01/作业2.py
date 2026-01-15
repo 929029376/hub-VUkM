@@ -61,7 +61,6 @@ Other
     return completion.choices[0].message.content
 
 if __name__ == "__main__":
-    print("2222")
 
     # pandas 用来进行表格的加载和分析
     # numpy 从矩阵的角度进行加载和计算
