@@ -1,0 +1,68 @@
+import pandas as pd
+import jieba
+from sklearn.feature_extraction.text import CountVectorizer # 词频统计
+from sklearn.neighbors import KNeighborsClassifier # KNN
+import os
+from openai import OpenAI
+
+dataset = pd.read_csv("dataset.csv", sep="\t", header=None, nrows=10000)
+print(dataset[1].value_counts())
+
+input_sententce = dataset[0].apply(lambda x: " ".join(jieba.lcut(x))) # sklearn对中文处理
+
+vector = CountVectorizer() # 对文本进行提取特征 默认是使用标点符号分词， 不是模型
+vector.fit(input_sententce.values) # 统计词表
+input_feature = vector.transform(input_sententce.values) # 进行转换 100 * 词表大小
+
+model = KNeighborsClassifier()
+model.fit(input_feature, dataset[1].values)
+
+#使用火山引擎API
+api_key = "1xxxxxxb-aaaa-bbbb-cccc-1234565d7bdc"
+client = OpenAI(
+    base_url="https://ark.cn-beijing.volces.com/api/v3",
+    api_key=api_key
+)  
+
+def text_calssify_using_ml(text: str) -> str:
+    """
+    文本分类（机器学习），输入文本完成类别划分
+    """
+    test_sentence = " ".join(jieba.lcut(text))
+    test_feature = vector.transform([test_sentence])
+    return model.predict(test_feature)[0]
+
+def text_calssify_using_llm(text: str) -> str:
+    """
+    文本分类（大语言模型），输入文本完成类别划分
+    """
+    response = client.chat.completions.create(
+        model="doubao-seed-1-8-251228",
+        
+        messages=[
+            {"role": "user", "content": f"""帮我进行文本分类：{text}
+
+输出的类别只能从如下中进行选择， 除了类别之外下列的类别，请给出最合适的类别。
+FilmTele-Play            
+Video-Play               
+Music-Play              
+Radio-Listen           
+Alarm-Update        
+Travel-Query        
+HomeAppliance-Control  
+Weather-Query          
+Calendar-Query      
+TVProgram-Play      
+Audio-Play       
+Other             
+"""}
+        ]
+    )
+    return response.choices[0].message
+
+if __name__ == "__main__":
+
+    # pandas 用来进行表格的加载和分析
+    # numpy 从矩阵的角度进行加载和计算
+    print("机器学习: ", text_calssify_using_ml("我想看电影复仇者联盟4"))
+    print("大语言模型: ", text_calssify_using_llm("我想看电影复仇者联盟4"))
