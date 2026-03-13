@@ -1,0 +1,6 @@
+ bert 文本分类和 实体识别有什么关系，分别使用什么loss？
+02-joint-bert-training-only 使用联合训练方式，将 BERT 作为共享编码器，同时完成意图识别和实体识别两个任务。意图识别属于句子级分类任务，使用 pooler_output 经过线性层输出类别，并采用 CrossEntropyLoss；实体识别属于 token 级序列标注任务，使用每个 token 的隐藏状态经过线性层输出 BIO 标签，同样采用 CrossEntropyLoss。
+
+多任务训练  loss = seq_loss + token_loss 有什么坏处，如果存在训练不平衡的情况，如何处理？
+训练时总损失为 loss = seq_loss + token_loss。这种简单相加的方法容易带来任务不平衡问题，例如某一任务的 loss 更大、梯度更强，从而主导共享参数更新，导致另一任务学习不足。若存在训练不平衡，可采用加权损失 loss = α*seq_loss + β*token_loss、动态权重分配、类别加权交叉熵、Focal Loss、重采样或分阶段训练等方法进行处理。
+
