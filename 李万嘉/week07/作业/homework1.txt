@@ -1,1 +1,7 @@
 
+question1:bert 文本分类和 实体识别有什么关系，分别使用什么loss？
+answer:bert文本分类
+
+
+quetion2:多任务训练  loss = seq_loss + token_loss 有什么坏处，如果存在训练不平衡的情况，如何处理？
+answer:
