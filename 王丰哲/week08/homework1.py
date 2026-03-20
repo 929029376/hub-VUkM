@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 import openai
 
 client = openai.OpenAI(
-    api_key="sk-831e7efd8a9449e396343b68a4e9547f",
+    api_key="sk-831e7efabuabuabuabu8a4e9547f",
     base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
 )
 
