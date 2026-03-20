@@ -4,7 +4,7 @@ from typing_extensions import Literal
 import openai
 
 client = openai.OpenAI(
-    api_key="sk-f0ab3fca58044adcb75b5a60974549b3",
+    api_key="sk-f0ab3fca58044xxxxxxx974549b3",
     base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
 )
 
