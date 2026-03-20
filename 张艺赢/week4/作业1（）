@@ -1,0 +1,209 @@
+import torch
+import pandas as pd
+import numpy as np
+from transformers import BertTokenizer, BertForSequenceClassification
+from sklearn.preprocessing import LabelEncoder
+import joblib
+import os
+
+class NewsClassifier:
+    def __init__(self, model_path='./new_model_weights/best_model/', label_encoder_path='./new_model_weights/label_encoder.pkl'):
+        """初始化分类器"""
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        print(f"使用设备: {self.device}")
+        
+        # 加载标签编码器
+        if os.path.exists(label_encoder_path):
+            self.label_encoder = joblib.load(label_encoder_path)
+            print(f"标签编码器已加载，类别数: {len(self.label_encoder.classes_)}")
+            print(f"类别: {list(self.label_encoder.classes_)}")
+        else:
+            print("标签编码器不存在，将使用默认类别")
+            self.label_encoder = None
+        
+        # 加载模型
+        if os.path.exists(model_path):
+            try:
+                self.tokenizer = BertTokenizer.from_pretrained(model_path)
+                self.model = BertForSequenceClassification.from_pretrained(model_path)
+                self.model.to(self.device)
+                self.model.eval()
+                print("BERT模型已加载")
+            except Exception as e:
+                print(f"模型加载失败: {e}")
+                self.model = None
+                self.tokenizer = None
+        else:
+            print("模型路径不存在，使用预训练模型进行测试")
+            # 使用预训练的中文BERT
+            try:
+                self.tokenizer = BertTokenizer.from_pretrained("bert-base-chinese")
+                # 假设有10个类别
+                self.model = BertForSequenceClassification.from_pretrained("bert-base-chinese", num_labels=10)
+                self.model.to(self.device)
+                self.model.eval()
+                print("使用预训练BERT模型")
+            except Exception as e:
+                print(f"预训练模型加载失败: {e}")
+                self.model = None
+                self.tokenizer = None
+    
+    def predict(self, texts, return_probabilities=False):
+        """预测文本类别"""
+        if self.model is None or self.tokenizer is None:
+            return ["模型未加载"] * len(texts) if isinstance(texts, list) else "模型未加载"
+        
+        # 确保texts是列表
+        if isinstance(texts, str):
+            texts = [texts]
+        
+        # 编码文本
+        encodings = self.tokenizer(
+            texts, 
+            truncation=True, 
+            padding=True, 
+            max_length=128,
+            return_tensors='pt'
+        )
+        
+        # 移动到设备
+        input_ids = encodings['input_ids'].to(self.device)
+        attention_mask = encodings['attention_mask'].to(self.device)
+        
+        # 预测
+        with torch.no_grad():
+            outputs = self.model(input_ids, attention_mask=attention_mask)
+            logits = outputs.logits
+            probabilities = torch.softmax(logits, dim=-1)
+            predictions = torch.argmax(logits, dim=-1)
+        
+        # 转换回标签
+        if self.label_encoder is not None:
+            predicted_labels = self.label_encoder.inverse_transform(predictions.cpu().numpy())
+        else:
+            # 使用默认标签
+            default_labels = ['体育', '娱乐', '科技', '财经', '汽车', '教育', '健康', '房产', '旅游', '文化']
+            predicted_labels = [default_labels[idx] for idx in predictions.cpu().numpy()]
+        
+        if return_probabilities:
+            return predicted_labels, probabilities.cpu().numpy()
+        else:
+            return predicted_labels[0] if len(predicted_labels) == 1 else predicted_labels
+
+def test_classifier():
+    """测试分类器"""
+    print("=== BERT新闻分类器测试 ===\n")
+    
+    # 初始化分类器
+    classifier = NewsClassifier()
+    
+    if classifier.model is None:
+        print("无法加载模型，测试终止")
+        return
+    
+    # 测试样本
+    test_samples = [
+        "中国足球队在世界杯预选赛中表现出色",
+        "最新iPhone发布会吸引了全球关注",
+        "股市今日大涨，投资者信心增强",
+        "专家建议冬季多吃温补食物",
+        "新能源汽车市场持续增长",
+        "高考改革政策即将实施",
+        "五一假期旅游预订量创新高",
+        "传统文化节庆祝活动丰富多彩",
+        "电影票房创历史新纪录",
+        "房地产调控政策效果显现"
+    ]
+    
+    print("测试样本:")
+    for i, sample in enumerate(test_samples, 1):
+        print(f"{i}. {sample}")
+    
+    print("\n" + "="*50)
+    print("开始预测...")
+    
+    # 批量预测
+    predictions, probabilities = classifier.predict(test_samples, return_probabilities=True)
+    
+    # 显示结果
+    print("\n预测结果:")
+    print("-" * 80)
+    print(f"{'序号':<4} {'文本':<30} {'预测类别':<10} {'置信度':<10}")
+    print("-" * 80)
+    
+    for i, (text, pred, prob) in enumerate(zip(test_samples, predictions, probabilities)):
+        max_prob = max(prob)
+        print(f"{i+1:<4} {text:<30} {pred:<10} {max_prob:.4f}")
+    
+    print("\n" + "="*50)
+    
+    # 测试单个样本
+    print("\n单个样本测试:")
+    single_text = "人工智能技术在医疗领域的应用越来越广泛"
+    single_pred = classifier.predict(single_text)
+    print(f"文本: {single_text}")
+    print(f"预测类别: {single_pred}")
+    
+    # 测试用户输入
+    print("\n" + "="*50)
+    print("用户输入测试 (输入'quit'退出):")
+    
+    while True:
+        user_input = input("\n请输入新闻文本: ").strip()
+        if user_input.lower() == 'quit':
+            break
+        
+        if user_input:
+            pred = classifier.predict(user_input)
+            print(f"预测类别: {pred}")
+        else:
+            print("请输入有效的文本")
+
+def evaluate_on_test_data():
+    """在测试数据上评估模型"""
+    print("\n=== 在测试数据上评估模型 ===")
+    
+    # 加载测试数据
+    try:
+        df = pd.read_csv('new_dataset.csv')
+        # 取一部分数据作为测试集
+        test_df = df.sample(n=50, random_state=42)
+        
+        classifier = NewsClassifier()
+        
+        if classifier.model is None:
+            print("无法加载模型，评估终止")
+            return
+        
+        # 预测
+        predictions = classifier.predict(test_df['text'].tolist())
+        true_labels = test_df['label'].tolist()
+        
+        # 计算准确率
+        correct = sum(1 for pred, true in zip(predictions, true_labels) if pred == true)
+        accuracy = correct / len(true_labels)
+        
+        print(f"测试样本数: {len(true_labels)}")
+        print(f"正确预测数: {correct}")
+        print(f"准确率: {accuracy:.4f} ({accuracy*100:.2f}%)")
+        
+        # 显示一些预测结果
+        print("\n部分预测结果:")
+        print("-" * 60)
+        for i in range(min(10, len(true_labels))):
+            status = "✓" if predictions[i] == true_labels[i] else "✗"
+            print(f"{status} 文本: {test_df.iloc[i]['text'][:20]}...")
+            print(f"  真实: {true_labels[i]}, 预测: {predictions[i]}")
+            print()
+        
+    except Exception as e:
+        print(f"评估失败: {e}")
+
+if __name__ == "__main__":
+    # 运行测试
+    test_classifier()
+    
+    # 运行评估
+    evaluate_on_test_data()
+    
+    print("\n=== 测试完成 ===")

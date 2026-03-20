@@ -1,0 +1,121 @@
+import pandas as pd
+from datasets import load_dataset
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# 加载中文新闻分类数据集
+def load_and_explore_dataset():
+    print("正在加载中文新闻分类数据集...")
+    
+    # 尝试加载THUCNews数据集（中文新闻分类）
+    try:
+        dataset = load_dataset("thu-coai/THUCNews", split="train")
+        print(f"成功加载THUCNews数据集，大小: {len(dataset)}")
+        
+        # 转换为pandas DataFrame
+        df = pd.DataFrame(dataset)
+        
+        # 查看数据集基本信息
+        print("\n数据集基本信息:")
+        print(f"总样本数: {len(df)}")
+        print(f"列名: {df.columns.tolist()}")
+        print(f"数据类型:\n{df.dtypes}")
+        
+        # 查看前几行数据
+        print("\n前5行数据:")
+        print(df.head())
+        
+        # 统计类别分布
+        if 'label' in df.columns:
+            label_counts = df['label'].value_counts()
+            print(f"\n类别分布:")
+            print(label_counts)
+            
+            # 获取唯一的类别名称
+            unique_labels = df['label'].unique()
+            print(f"\n唯一类别数: {len(unique_labels)}")
+            print(f"类别列表: {sorted(unique_labels)}")
+            
+        elif 'category' in df.columns:
+            category_counts = df['category'].value_counts()
+            print(f"\n类别分布:")
+            print(category_counts)
+            
+            unique_categories = df['category'].unique()
+            print(f"\n唯一类别数: {len(unique_categories)}")
+            print(f"类别列表: {sorted(unique_categories)}")
+        
+        return df
+        
+    except Exception as e:
+        print(f"加载THUCNews数据集失败: {e}")
+        
+        # 尝试其他中文数据集
+        try:
+            print("尝试加载其他中文数据集...")
+            dataset = load_dataset("BAAI/COIG-PC-core", split="train")
+            df = pd.DataFrame(dataset)
+            print(f"成功加载COIG-PC-core数据集，大小: {len(df)}")
+            print(f"列名: {df.columns.tolist()}")
+            return df
+            
+        except Exception as e2:
+            print(f"加载其他数据集也失败: {e2}")
+            
+            # 创建模拟数据集
+            print("创建模拟数据集进行演示...")
+            categories = ['体育', '娱乐', '科技', '财经', '汽车', '教育', '健康', '房产', '旅游', '文化']
+            
+            # 创建一些模拟文本数据
+            texts = [
+                '中国队在世界杯预选赛中取得胜利', '明星参加综艺节目引热议', '新iPhone发布会即将举行',
+                '股市今日大幅上涨', '新能源汽车销量创新高', '高考改革政策出台',
+                '专家建议多吃蔬菜水果', '一线城市房价持续上涨', '五一假期旅游预订火爆',
+                '传统文化节日庆祝活动', '篮球比赛精彩瞬间', '电影票房创新纪录',
+                '人工智能技术突破', '银行利率调整影响理财', '自动驾驶技术进展',
+                '大学生就业形势分析', '冬季养生注意事项', '房地产投资趋势',
+                '国内外旅游推荐', '书法展览吸引众多观众'
+            ]
+            
+            # 扩展数据集
+            extended_texts = texts * 25  # 扩展到500个样本
+            extended_categories = []
+            for i in range(len(extended_texts)):
+                extended_categories.append(categories[i % len(categories)])
+            
+            df = pd.DataFrame({
+                'text': extended_texts,
+                'label': extended_categories
+            })
+            
+            print(f"创建模拟数据集，大小: {len(df)}")
+            print(f"类别分布:")
+            print(df['label'].value_counts())
+            
+            return df
+
+if __name__ == "__main__":
+    df = load_and_explore_dataset()
+    
+    # 保存数据集
+    df.to_csv('new_dataset.csv', index=False, encoding='utf-8')
+    print(f"\n数据集已保存到 new_dataset.csv")
+    
+    # 显示数据分布可视化
+    try:
+        plt.figure(figsize=(12, 6))
+        if 'label' in df.columns:
+            sns.countplot(data=df, x='label')
+            plt.title('类别分布')
+            plt.xticks(rotation=45)
+        elif 'category' in df.columns:
+            sns.countplot(data=df, x='category')
+            plt.title('类别分布')
+            plt.xticks(rotation=45)
+        
+        plt.tight_layout()
+        plt.savefig('category_distribution.png', dpi=300, bbox_inches='tight')
+        print("类别分布图已保存到 category_distribution.png")
+        
+    except Exception as e:
+        print(f"绘图失败: {e}")
