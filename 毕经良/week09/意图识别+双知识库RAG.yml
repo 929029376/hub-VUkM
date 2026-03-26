@@ -1,0 +1,554 @@
+app:
+  description: ''
+  icon: 🤖
+  icon_background: '#FFEAD5'
+  mode: workflow
+  name: 意图识别+双知识库RAG
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/deepseek:0.0.6@dd589dc093c8084925858034ab5ec1fdf0d33819f43226c2f8c4a749a9acbbb2
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/tongyi:0.0.26@4f1c4ded3d189719b7dd54e9d4e5b26f724f3632f3dfaa299491b42accc112c8
+kind: app
+version: 0.3.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      allowed_file_extensions:
+      - .JPG
+      - .JPEG
+      - .PNG
+      - .GIF
+      - .WEBP
+      - .SVG
+      allowed_file_types:
+      - image
+      allowed_file_upload_methods:
+      - local_file
+      - remote_url
+      enabled: false
+      fileUploadConfig:
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 15
+        image_file_size_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 3
+    opening_statement: ''
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: start
+        targetType: llm
+      id: 1774508449542-source-1774508464122-target
+      source: '1774508449542'
+      sourceHandle: source
+      target: '1774508464122'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: if-else
+      id: 1774508464122-source-1774508735456-target
+      source: '1774508464122'
+      sourceHandle: source
+      target: '1774508735456'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: if-else
+        targetType: knowledge-retrieval
+      id: 1774508735456-true-1774509041337-target
+      source: '1774508735456'
+      sourceHandle: 'true'
+      target: '1774509041337'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: if-else
+        targetType: knowledge-retrieval
+      id: 1774508735456-2a671bcd-406b-46d0-9fd5-d44a7c99a2a0-1774509078574-target
+      source: '1774508735456'
+      sourceHandle: 2a671bcd-406b-46d0-9fd5-d44a7c99a2a0
+      target: '1774509078574'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: if-else
+        targetType: llm
+      id: 1774508735456-false-1774509142577-target
+      selected: false
+      source: '1774508735456'
+      sourceHandle: 'false'
+      target: '1774509142577'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: knowledge-retrieval
+        targetType: llm
+      id: 1774509041337-source-1774509217630-target
+      source: '1774509041337'
+      sourceHandle: source
+      target: '1774509217630'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: knowledge-retrieval
+        targetType: llm
+      id: 1774509078574-source-1774509308444-target
+      source: '1774509078574'
+      sourceHandle: source
+      target: '1774509308444'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: code
+      id: 1774509217630-source-1774510866483-target
+      source: '1774509217630'
+      sourceHandle: source
+      target: '1774510866483'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: code
+      id: 1774509308444-source-1774510866483-target
+      source: '1774509308444'
+      sourceHandle: source
+      target: '1774510866483'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: code
+      id: 1774509142577-source-1774510866483-target
+      source: '1774509142577'
+      sourceHandle: source
+      target: '1774510866483'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: code
+        targetType: end
+      id: 1774510866483-source-1774510990510-target
+      source: '1774510866483'
+      sourceHandle: source
+      target: '1774510990510'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        desc: ''
+        selected: false
+        title: 开始
+        type: start
+        variables:
+        - label: question
+          max_length: 50
+          options: []
+          required: true
+          type: text-input
+          variable: question
+      height: 90
+      id: '1774508449542'
+      position:
+        x: 80
+        y: 282
+      positionAbsolute:
+        x: 80
+        y: 282
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - '1774508449542'
+          - question
+        desc: ''
+        model:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: deepseek-chat
+          provider: langgenius/deepseek/deepseek
+        prompt_template:
+        - id: 71c57b19-5283-4baa-8eb3-8a47beb1baaa
+          role: system
+          text: '你是一个意图分类助手，只需要根据用户的问题{{#1774508449542.question#}}，输出唯一分类结果，不要解释、不要多余内容。
+
+
+            分类规则：
+
+            1. 如果问题与【机器学习】相关 → 输出：machine_learning
+
+            2. 如果问题与【大模型】相关 → 输出：llm
+
+            3. 其他所有问题 → 输出：other
+
+
+            只输出分类关键词！'
+        - id: b4c45553-c9e0-40ca-80ac-bcbf7c54b7d4
+          role: user
+          text: ''
+        selected: false
+        title: LLM
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 90
+      id: '1774508464122'
+      position:
+        x: 384
+        y: 282
+      positionAbsolute:
+        x: 384
+        y: 282
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        cases:
+        - case_id: 'true'
+          conditions:
+          - comparison_operator: is
+            id: 80f42c5a-4c47-4f6f-a980-b2a41dceddd6
+            value: machine_learning
+            varType: string
+            variable_selector:
+            - '1774508464122'
+            - text
+          id: 'true'
+          logical_operator: and
+        - case_id: 2a671bcd-406b-46d0-9fd5-d44a7c99a2a0
+          conditions:
+          - comparison_operator: is
+            id: 4000723e-ee54-41a2-bf4b-52389fb5039f
+            value: llm
+            varType: string
+            variable_selector:
+            - '1774508464122'
+            - text
+          id: 2a671bcd-406b-46d0-9fd5-d44a7c99a2a0
+          logical_operator: and
+        desc: ''
+        selected: false
+        title: 条件分支
+        type: if-else
+      height: 174
+      id: '1774508735456'
+      position:
+        x: 424.2245484100074
+        y: 528.1904214839931
+      positionAbsolute:
+        x: 424.2245484100074
+        y: 528.1904214839931
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        dataset_ids:
+        - ymJxgbgF1BqfR+PwN9YcjYCiJyEbKtn+79UnUdJJWoDelIauuL585dsWeJkjfSHw
+        desc: ''
+        multiple_retrieval_config:
+          reranking_enable: false
+          reranking_mode: reranking_model
+          reranking_model:
+            model: gte-rerank
+            provider: langgenius/tongyi/tongyi
+          top_k: 4
+        query_variable_selector:
+        - '1774508449542'
+        - question
+        retrieval_mode: multiple
+        selected: false
+        title: 知识检索
+        type: knowledge-retrieval
+      height: 92
+      id: '1774509041337'
+      position:
+        x: 992
+        y: 282
+      positionAbsolute:
+        x: 992
+        y: 282
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        dataset_ids:
+        - 9ThG6EvWcvJ1ywaYvenyqCbt6pDG5xmYKHwnb9GPys+RDOs+lumvDEpBmDwrKLQu
+        desc: ''
+        multiple_retrieval_config:
+          reranking_enable: false
+          reranking_mode: reranking_model
+          reranking_model:
+            model: gte-rerank
+            provider: langgenius/tongyi/tongyi
+          top_k: 4
+        query_variable_selector:
+        - '1774508449542'
+        - question
+        retrieval_mode: multiple
+        selected: false
+        title: 知识检索 2
+        type: knowledge-retrieval
+      height: 92
+      id: '1774509078574'
+      position:
+        x: 992
+        y: 413
+      positionAbsolute:
+        x: 992
+        y: 413
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - '1774508449542'
+          - question
+        desc: ''
+        model:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: deepseek-chat
+          provider: langgenius/deepseek/deepseek
+        prompt_template:
+        - id: 32a162bc-56da-4976-ae71-a5d5905f7823
+          role: system
+          text: 你是一个智能助手，直接回答用户问题{{#1774508449542.question#}}
+        selected: false
+        title: LLM 2
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 90
+      id: '1774509142577'
+      position:
+        x: 1088.722876361845
+        y: 790.3209251348319
+      positionAbsolute:
+        x: 1088.722876361845
+        y: 790.3209251348319
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - '1774509041337'
+          - result
+        desc: ''
+        model:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: deepseek-chat
+          provider: langgenius/deepseek/deepseek
+        prompt_template:
+        - id: e4ebc187-10bf-4d3d-83b4-97a461f1d4e0
+          role: system
+          text: 基于检索到的知识库内容{{#context#}}回答用户问题，不要编造答案；先输出检索结果，再根据检索结果输出汇总后的答案
+        selected: false
+        title: LLM 3
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 90
+      id: '1774509217630'
+      position:
+        x: 1557.796585352727
+        y: 343.9026408715808
+      positionAbsolute:
+        x: 1557.796585352727
+        y: 343.9026408715808
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - '1774509078574'
+          - result
+        desc: ''
+        model:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: deepseek-chat
+          provider: langgenius/deepseek/deepseek
+        prompt_template:
+        - id: e2c25f83-09a0-48e0-a0af-e9f3ba6de284
+          role: system
+          text: 基于检索到的知识库内容{{#context#}}回答用户问题，不要编造答案；先输出检索结果，再根据检索结果输出汇总后的答案
+        selected: false
+        title: LLM 4
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 90
+      id: '1774509308444'
+      position:
+        x: 1294.7103616485088
+        y: 583.2322623968472
+      positionAbsolute:
+        x: 1294.7103616485088
+        y: 583.2322623968472
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        code: "\ndef main(llm_2_text: str = \"\", llm_3_text: str = \"\", llm_4_text:\
+          \ str = \"\") -> dict:\n    # 按优先级取第一个非空的回答\n    answer = llm_2_text or\
+          \ llm_3_text or llm_4_text or \"暂无回答\"\n    return {\"answer\": answer}\n"
+        code_language: python3
+        desc: ''
+        outputs:
+          answer:
+            children: null
+            type: string
+        selected: false
+        title: 代码执行
+        type: code
+        variables:
+        - value_selector:
+          - '1774509142577'
+          - text
+          value_type: string
+          variable: llm_2_text
+        - value_selector:
+          - '1774509217630'
+          - text
+          value_type: string
+          variable: llm_3_text
+        - value_selector:
+          - '1774509308444'
+          - text
+          value_type: string
+          variable: llm_4_text
+      height: 54
+      id: '1774510866483'
+      position:
+        x: 1804.6706309092765
+        y: 603.2853529391408
+      positionAbsolute:
+        x: 1804.6706309092765
+        y: 603.2853529391408
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        desc: ''
+        outputs:
+        - value_selector:
+          - '1774510866483'
+          - answer
+          value_type: string
+          variable: answer
+        selected: false
+        title: 结束
+        type: end
+      height: 90
+      id: '1774510990510'
+      position:
+        x: 2139.9756507543825
+        y: 343.9026408715808
+      positionAbsolute:
+        x: 2139.9756507543825
+        y: 343.9026408715808
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    viewport:
+      x: -121.00849125765569
+      y: 85.74843544829358
+      zoom: 0.5534372668556202
