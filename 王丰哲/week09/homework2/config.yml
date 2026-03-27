@@ -1,0 +1,495 @@
+app:
+  description: 通过问题分类器将用户问题分流到普通问答、机器学习知识库或大模型知识库
+  icon: books
+  icon_background: '#DFF6DD'
+  mode: advanced-chat
+  name: 作业2-意图识别-双知识库RAG
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/tongyi:0.0.26@4f1c4ded3d189719b7dd54e9d4e5b26f724f3632f3dfaa299491b42accc112c8
+kind: app
+version: 0.2.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      allowed_file_extensions:
+      - .JPG
+      - .JPEG
+      - .PNG
+      - .GIF
+      - .WEBP
+      - .SVG
+      allowed_file_types:
+      - image
+      allowed_file_upload_methods:
+      - local_file
+      - remote_url
+      enabled: false
+      fileUploadConfig:
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 15
+        image_file_size_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 3
+    opening_statement: 你可以问我机器学习问题、大模型问题，或者普通问题，我会自动识别意图并决定是否走知识库 RAG。
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions:
+    - 什么是梯度下降？
+    - LoRA 微调和全量微调有什么区别？
+    - 帮我写一段简短的自我介绍
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInIteration: false
+        sourceType: start
+        targetType: question-classifier
+      id: 1761800002001-source-1761800002002-target
+      source: '1761800002001'
+      sourceHandle: source
+      target: '1761800002002'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: question-classifier
+        targetType: llm
+      id: 1761800002002-1-1761800002008-target
+      source: '1761800002002'
+      sourceHandle: '1'
+      target: '1761800002008'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: llm
+        targetType: answer
+      id: 1761800002008-source-1761800002009-target
+      source: '1761800002008'
+      sourceHandle: source
+      target: '1761800002009'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: question-classifier
+        targetType: knowledge-retrieval
+      id: 1761800002002-2-1761800002003-target
+      source: '1761800002002'
+      sourceHandle: '2'
+      target: '1761800002003'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: knowledge-retrieval
+        targetType: llm
+      id: 1761800002003-source-1761800002004-target
+      source: '1761800002003'
+      sourceHandle: source
+      target: '1761800002004'
+      targetHandle: '1761800002003'
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: llm
+        targetType: answer
+      id: 1761800002004-source-1761800002007-target
+      source: '1761800002004'
+      sourceHandle: source
+      target: '1761800002007'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: question-classifier
+        targetType: knowledge-retrieval
+      id: 1761800002002-3-1761800002005-target
+      source: '1761800002002'
+      sourceHandle: '3'
+      target: '1761800002005'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: knowledge-retrieval
+        targetType: llm
+      id: 1761800002005-source-1761800002006-target
+      source: '1761800002005'
+      sourceHandle: source
+      target: '1761800002006'
+      targetHandle: '1761800002005'
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: llm
+        targetType: answer
+      id: 1761800002006-source-1761800002010-target
+      source: '1761800002006'
+      sourceHandle: source
+      target: '1761800002010'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        desc: 接收用户聊天输入
+        selected: false
+        title: Start
+        type: start
+        variables: []
+      height: 53
+      id: '1761800002001'
+      position:
+        x: 36
+        y: 340
+      positionAbsolute:
+        x: 36
+        y: 340
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        classes:
+        - id: '1'
+          name: 通用问题
+        - id: '2'
+          name: 机器学习问题
+        - id: '3'
+          name: 大模型问题
+        desc: 将用户问题识别为普通问答、机器学习问答或大模型问答
+        instructions: |
+          请根据用户问题的主题进行三分类：
+
+          - 通用问题：不属于机器学习或大模型领域的问题，例如生活常识、闲聊、写作润色、普通知识问答
+          - 机器学习问题：涉及监督学习、无监督学习、分类、回归、聚类、决策树、SVM、过拟合、交叉验证、特征工程、评估指标等
+          - 大模型问题：涉及 Transformer、Prompt、RAG、微调、LoRA、Agent、上下文窗口、幻觉、多模态、Embedding 等
+
+          只选择最匹配的一类。
+        model:
+          completion_params:
+            temperature: 0.1
+          mode: chat
+          name: qwen2.5-72b-instruct
+          provider: langgenius/tongyi/tongyi
+        query_variable_selector:
+        - '1761800002001'
+        - sys.query
+        selected: false
+        title: 意图识别
+        topics: []
+        type: question-classifier
+        vision:
+          enabled: false
+      height: 220
+      id: '1761800002002'
+      position:
+        x: 336
+        y: 260
+      positionAbsolute:
+        x: 336
+        y: 260
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        dataset_ids:
+        - 11111111-1111-1111-1111-111111111111
+        desc: 导入后请在该节点绑定“机器学习知识库”
+        multiple_retrieval_config:
+          reranking_enable: false
+          reranking_mode: reranking_model
+          reranking_model:
+            model: ''
+            provider: ''
+          score_threshold: null
+          top_k: 4
+        query_variable_selector:
+        - '1761800002001'
+        - sys.query
+        retrieval_mode: multiple
+        selected: false
+        title: 机器学习知识库检索
+        type: knowledge-retrieval
+      height: 126
+      id: '1761800002003'
+      position:
+        x: 668
+        y: 220
+      positionAbsolute:
+        x: 668
+        y: 220
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - '1761800002003'
+          - result
+        desc: 使用机器学习知识库片段生成回答
+        model:
+          completion_params:
+            temperature: 0.3
+          mode: chat
+          name: qwen2.5-72b-instruct
+          provider: langgenius/tongyi/tongyi
+        prompt_template:
+        - id: 1761800002004-system
+          role: system
+          text: |
+            你是机器学习问答助手。请严格依据提供的背景知识回答用户问题。
+
+            要求：
+            - 优先使用背景知识中的信息
+            - 若背景知识不足，请明确说“机器学习知识库中暂无足够信息”
+            - 回答保持准确、简洁、结构清晰
+        - id: 1761800002004-user
+          role: user
+          text: |
+            背景知识：
+            {{#context#}}
+
+            用户问题：
+            {{#sys.query#}}
+        selected: false
+        title: 机器学习RAG回答
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 124
+      id: '1761800002004'
+      position:
+        x: 1004
+        y: 220
+      positionAbsolute:
+        x: 1004
+        y: 220
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        dataset_ids:
+        - 22222222-2222-2222-2222-222222222222
+        desc: 导入后请在该节点绑定“大模型知识库”
+        multiple_retrieval_config:
+          reranking_enable: false
+          reranking_mode: reranking_model
+          reranking_model:
+            model: ''
+            provider: ''
+          score_threshold: null
+          top_k: 4
+        query_variable_selector:
+        - '1761800002001'
+        - sys.query
+        retrieval_mode: multiple
+        selected: false
+        title: 大模型知识库检索
+        type: knowledge-retrieval
+      height: 126
+      id: '1761800002005'
+      position:
+        x: 668
+        y: 500
+      positionAbsolute:
+        x: 668
+        y: 500
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - '1761800002005'
+          - result
+        desc: 使用大模型知识库片段生成回答
+        model:
+          completion_params:
+            temperature: 0.3
+          mode: chat
+          name: qwen2.5-72b-instruct
+          provider: langgenius/tongyi/tongyi
+        prompt_template:
+        - id: 1761800002006-system
+          role: system
+          text: |
+            你是大模型问答助手。请严格依据提供的背景知识回答用户问题。
+
+            要求：
+            - 优先使用背景知识中的信息
+            - 若背景知识不足，请明确说“大模型知识库中暂无足够信息”
+            - 回答保持准确、简洁、结构清晰
+        - id: 1761800002006-user
+          role: user
+          text: |
+            背景知识：
+            {{#context#}}
+
+            用户问题：
+            {{#sys.query#}}
+        selected: false
+        title: 大模型RAG回答
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 124
+      id: '1761800002006'
+      position:
+        x: 1004
+        y: 500
+      positionAbsolute:
+        x: 1004
+        y: 500
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        answer: '{{#1761800002004.text#}}'
+        desc: 返回机器学习知识库回答
+        selected: false
+        title: 机器学习回答
+        type: answer
+        variables: []
+      height: 104
+      id: '1761800002007'
+      position:
+        x: 1332
+        y: 220
+      positionAbsolute:
+        x: 1332
+        y: 220
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: 非机器学习/非大模型问题直接调用 LLM 回答
+        model:
+          completion_params:
+            temperature: 0.5
+          mode: chat
+          name: qwen2.5-72b-instruct
+          provider: langgenius/tongyi/tongyi
+        prompt_template:
+        - id: 1761800002008-system
+          role: system
+          text: |
+            你是通用问答助手。对于不属于机器学习和大模型领域的问题，请直接给出自然、准确、简洁的中文回答，不要提及分类流程。
+        - id: 1761800002008-user
+          role: user
+          text: '{{#sys.query#}}'
+        selected: false
+        title: 通用LLM回答
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 112
+      id: '1761800002008'
+      position:
+        x: 668
+        y: 760
+      positionAbsolute:
+        x: 668
+        y: 760
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        answer: '{{#1761800002008.text#}}'
+        desc: 返回通用回答
+        selected: false
+        title: 通用回答
+        type: answer
+        variables: []
+      height: 104
+      id: '1761800002009'
+      position:
+        x: 1004
+        y: 760
+      positionAbsolute:
+        x: 1004
+        y: 760
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        answer: '{{#1761800002006.text#}}'
+        desc: 返回大模型知识库回答
+        selected: false
+        title: 大模型回答
+        type: answer
+        variables: []
+      height: 104
+      id: '1761800002010'
+      position:
+        x: 1332
+        y: 500
+      positionAbsolute:
+        x: 1332
+        y: 500
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    viewport:
+      x: 0
+      y: 0
+      zoom: 0.75
