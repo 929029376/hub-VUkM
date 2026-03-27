@@ -1,0 +1,467 @@
+app:
+  description: 结合年龄、BMI与体脂率，生成更完整的健康建议
+  icon: heart
+  icon_background: '#FFEAD5'
+  mode: workflow
+  name: 作业1-体脂健康建议-年龄增强版
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/tongyi:0.0.26@4f1c4ded3d189719b7dd54e9d4e5b26f724f3632f3dfaa299491b42accc112c8
+kind: app
+version: 0.2.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      allowed_file_extensions:
+      - .JPG
+      - .JPEG
+      - .PNG
+      - .GIF
+      - .WEBP
+      - .SVG
+      allowed_file_types:
+      - image
+      allowed_file_upload_methods:
+      - local_file
+      - remote_url
+      enabled: false
+      fileUploadConfig:
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 15
+        image_file_size_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 3
+    opening_statement: 请输入性别、年龄、身高和体重，我会结合 BMI 与体脂率给出更完整的健康建议。
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: start
+        targetType: code
+      id: 1761800001001-source-1761800001002-target
+      source: '1761800001001'
+      sourceHandle: source
+      target: '1761800001002'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: llm
+      id: 1761800001002-source-1761800001003-target
+      source: '1761800001002'
+      sourceHandle: source
+      target: '1761800001003'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: template-transform
+      id: 1761800001003-source-1761800001004-target
+      source: '1761800001003'
+      sourceHandle: source
+      target: '1761800001004'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: template-transform
+        targetType: end
+      id: 1761800001004-source-1761800001005-target
+      source: '1761800001004'
+      sourceHandle: source
+      target: '1761800001005'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        desc: 收集用户基础身体信息
+        selected: false
+        title: 开始
+        type: start
+        variables:
+        - label: 性别
+          max_length: 48
+          options:
+          - 男
+          - 女
+          required: true
+          type: select
+          variable: sex
+        - label: 年龄
+          max_length: 48
+          options: []
+          required: true
+          type: number
+          variable: age
+        - label: 身高(cm)
+          max_length: 48
+          options: []
+          required: true
+          type: number
+          variable: height
+        - label: 体重(kg)
+          max_length: 48
+          options: []
+          required: true
+          type: number
+          variable: weight
+      height: 170
+      id: '1761800001001'
+      position:
+        x: 36
+        y: 300
+      positionAbsolute:
+        x: 36
+        y: 300
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        code: |
+          def main(sex: str, age: int, height: float, weight: float) -> dict:
+              if height <= 0 or weight <= 0 or age <= 0:
+                  return {
+                      "bmi": 0,
+                      "body_fat_percentage": 0,
+                      "bmi_status": "数据异常",
+                      "body_fat_status": "数据异常",
+                      "age_group": "未知",
+                      "attention_hint": "请输入有效的年龄、身高和体重。"
+                  }
+
+              bmi = weight / ((height / 100) ** 2)
+              bmi = round(bmi, 2)
+
+              sex_flag = 1 if sex == "男" else 0
+              body_fat_percentage = 1.2 * bmi + 0.23 * age - 10.8 * sex_flag - 5.4
+              body_fat_percentage = max(0, min(round(body_fat_percentage, 2), 60))
+
+              if bmi < 18.5:
+                  bmi_status = "偏瘦"
+              elif bmi < 24:
+                  bmi_status = "正常"
+              elif bmi < 28:
+                  bmi_status = "超重"
+              else:
+                  bmi_status = "肥胖"
+
+              if age < 18:
+                  age_group = "未成年"
+              elif age < 40:
+                  age_group = "18-39岁"
+              elif age < 60:
+                  age_group = "40-59岁"
+              else:
+                  age_group = "60岁及以上"
+
+              if sex == "男":
+                  if age < 40:
+                      low, normal, high = 8, 19, 24
+                  elif age < 60:
+                      low, normal, high = 11, 21, 28
+                  else:
+                      low, normal, high = 13, 24, 30
+              else:
+                  if age < 40:
+                      low, normal, high = 21, 32, 38
+                  elif age < 60:
+                      low, normal, high = 23, 33, 39
+                  else:
+                      low, normal, high = 24, 35, 41
+
+              if body_fat_percentage < low:
+                  body_fat_status = "体脂偏低"
+              elif body_fat_percentage <= normal:
+                  body_fat_status = "体脂正常"
+              elif body_fat_percentage <= high:
+                  body_fat_status = "体脂偏高"
+              else:
+                  body_fat_status = "体脂过高"
+
+              hints = []
+              if age < 18:
+                  hints.append("未成年人处于生长发育阶段，建议在家长和专业人士指导下调整饮食和运动。")
+              elif age >= 60:
+                  hints.append("60岁及以上人群更需要关注关节负担、肌肉流失和慢病风险，运动宜循序渐进。")
+
+              if bmi_status in {"超重", "肥胖"} or body_fat_status in {"体脂偏高", "体脂过高"}:
+                  hints.append("当前体重或体脂控制压力较大，建议优先稳定作息、控制总热量并增加规律运动。")
+              elif bmi_status == "偏瘦" or body_fat_status == "体脂偏低":
+                  hints.append("需关注营养摄入是否充足，避免为了减脂而过度节食。")
+              else:
+                  hints.append("整体处于相对理想区间，重点是保持稳定习惯。")
+
+              return {
+                  "bmi": bmi,
+                  "body_fat_percentage": body_fat_percentage,
+                  "bmi_status": bmi_status,
+                  "body_fat_status": body_fat_status,
+                  "age_group": age_group,
+                  "attention_hint": " ".join(hints)
+              }
+        code_language: python3
+        desc: 计算 BMI、体脂率，并根据年龄段给出状态判断
+        outputs:
+          age_group:
+            children: null
+            type: string
+          attention_hint:
+            children: null
+            type: string
+          bmi:
+            children: null
+            type: number
+          bmi_status:
+            children: null
+            type: string
+          body_fat_percentage:
+            children: null
+            type: number
+          body_fat_status:
+            children: null
+            type: string
+        selected: false
+        title: 指标计算
+        type: code
+        variables:
+        - value_selector:
+          - '1761800001001'
+          - sex
+          variable: sex
+        - value_selector:
+          - '1761800001001'
+          - age
+          variable: age
+        - value_selector:
+          - '1761800001001'
+          - height
+          variable: height
+        - value_selector:
+          - '1761800001001'
+          - weight
+          variable: weight
+      height: 92
+      id: '1761800001002'
+      position:
+        x: 340
+        y: 300
+      positionAbsolute:
+        x: 340
+        y: 300
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: 根据年龄、BMI 与体脂率生成更完整的建议
+        model:
+          completion_params:
+            temperature: 0.3
+          mode: chat
+          name: qwen2.5-72b-instruct
+          provider: langgenius/tongyi/tongyi
+        prompt_template:
+        - id: 1761800001003-system
+          role: system
+          text: |
+            你是营养与运动健康顾问，请根据用户的性别、年龄、BMI、体脂率和状态判断，输出完整、清晰、可执行的中文建议。
+
+            请按照以下结构回答：
+            1. 身体状态总结
+            2. 饮食建议
+            3. 运动建议
+            4. 作息与复查建议
+
+            要求：
+            - 必须结合年龄阶段给出差异化建议
+            - 建议要具体，不要空泛
+            - 不要夸大医疗结论
+            - 如果指标明显异常，提醒用户必要时线下咨询医生或营养师
+        - id: 1761800001003-user
+          role: user
+          text: |
+            性别：{{#1761800001001.sex#}}
+            年龄：{{#1761800001001.age#}}
+            身高：{{#1761800001001.height#}} cm
+            体重：{{#1761800001001.weight#}} kg
+            BMI：{{#1761800001002.bmi#}}
+            BMI状态：{{#1761800001002.bmi_status#}}
+            体脂率：{{#1761800001002.body_fat_percentage#}}%
+            体脂状态：{{#1761800001002.body_fat_status#}}
+            年龄分组：{{#1761800001002.age_group#}}
+            特别提示：{{#1761800001002.attention_hint#}}
+        selected: false
+        structured_output_enabled: false
+        title: LLM建议生成
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 118
+      id: '1761800001003'
+      position:
+        x: 668
+        y: 300
+      positionAbsolute:
+        x: 668
+        y: 300
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        desc: 汇总用户信息、计算指标和最终建议
+        selected: false
+        template: |
+          ## 用户基本信息
+
+          - 性别：{{ sex }}
+          - 年龄：{{ age }}
+          - 身高：{{ height }} cm
+          - 体重：{{ weight }} kg
+
+          ## 指标计算结果
+
+          - BMI：{{ bmi }}
+          - BMI状态：{{ bmi_status }}
+          - 体脂率：{{ body_fat_percentage }}%
+          - 体脂状态：{{ body_fat_status }}
+          - 年龄分组：{{ age_group }}
+
+          ## 额外提示
+
+          {{ attention_hint }}
+
+          ## 健康建议
+
+          {{ text }}
+        title: 模板转换
+        type: template-transform
+        variables:
+        - value_selector:
+          - '1761800001001'
+          - sex
+          variable: sex
+        - value_selector:
+          - '1761800001001'
+          - age
+          variable: age
+        - value_selector:
+          - '1761800001001'
+          - height
+          variable: height
+        - value_selector:
+          - '1761800001001'
+          - weight
+          variable: weight
+        - value_selector:
+          - '1761800001002'
+          - bmi
+          variable: bmi
+        - value_selector:
+          - '1761800001002'
+          - bmi_status
+          variable: bmi_status
+        - value_selector:
+          - '1761800001002'
+          - body_fat_percentage
+          variable: body_fat_percentage
+        - value_selector:
+          - '1761800001002'
+          - body_fat_status
+          variable: body_fat_status
+        - value_selector:
+          - '1761800001002'
+          - age_group
+          variable: age_group
+        - value_selector:
+          - '1761800001002'
+          - attention_hint
+          variable: attention_hint
+        - value_selector:
+          - '1761800001003'
+          - text
+          variable: text
+      height: 92
+      id: '1761800001004'
+      position:
+        x: 1000
+        y: 300
+      positionAbsolute:
+        x: 1000
+        y: 300
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        desc: ''
+        outputs:
+        - value_selector:
+          - '1761800001004'
+          - output
+          variable: output
+        selected: false
+        title: 结束
+        type: end
+      height: 90
+      id: '1761800001005'
+      position:
+        x: 1316
+        y: 300
+      positionAbsolute:
+        x: 1316
+        y: 300
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    viewport:
+      x: 0
+      y: 0
+      zoom: 0.8
