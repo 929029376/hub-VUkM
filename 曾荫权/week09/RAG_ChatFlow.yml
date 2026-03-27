@@ -1,0 +1,377 @@
+app:
+  description: ''
+  icon: 🤖
+  icon_background: '#FFEAD5'
+  icon_type: emoji
+  mode: advanced-chat
+  name: RAG_ChatFlow
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/ollama:0.1.2@fcf107badccaf57948634ad2c557d393c3894138d83f4eb3f959e9a1d3a86512
+    version: null
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/tongyi:0.0.26@4f1c4ded3d189719b7dd54e9d4e5b26f724f3632f3dfaa299491b42accc112c8
+    version: null
+kind: app
+version: 0.6.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      allowed_file_extensions:
+      - .JPG
+      - .JPEG
+      - .PNG
+      - .GIF
+      - .WEBP
+      - .SVG
+      allowed_file_types:
+      - image
+      allowed_file_upload_methods:
+      - local_file
+      - remote_url
+      enabled: false
+      fileUploadConfig:
+        attachment_image_file_size_limit: 2
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 15
+        file_upload_limit: 20
+        image_file_batch_limit: 10
+        image_file_size_limit: 10
+        single_chunk_attachment_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 3
+    opening_statement: ''
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        sourceType: llm
+        targetType: answer
+      id: llm-answer
+      selected: false
+      source: llm
+      sourceHandle: source
+      target: answer
+      targetHandle: target
+      type: custom
+    - data:
+        isInLoop: false
+        sourceType: start
+        targetType: question-classifier
+      id: 1774451843859-source-1774453095716-target
+      selected: false
+      source: '1774451843859'
+      sourceHandle: source
+      target: '1774453095716'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: question-classifier
+        targetType: llm
+      id: 1774453095716-1-llm-target
+      selected: false
+      source: '1774453095716'
+      sourceHandle: '1'
+      target: llm
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: question-classifier
+        targetType: llm
+      id: 1774453095716-2-llm-target
+      selected: false
+      source: '1774453095716'
+      sourceHandle: '2'
+      target: llm
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: question-classifier
+        targetType: llm
+      id: 1774453095716-1774454912901-llm-target
+      selected: false
+      source: '1774453095716'
+      sourceHandle: '1774454912901'
+      target: llm
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: question-classifier
+        targetType: knowledge-retrieval
+      id: 1774453095716-1774455465853-1774455623829-target
+      selected: false
+      source: '1774453095716'
+      sourceHandle: '1774455465853'
+      target: '1774455623829'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: question-classifier
+        targetType: knowledge-retrieval
+      id: 1774453095716-1774455597276-1774455623829-target
+      selected: false
+      source: '1774453095716'
+      sourceHandle: '1774455597276'
+      target: '1774455623829'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: question-classifier
+        targetType: llm
+      id: 1774453095716-1774454919886-llm-target
+      selected: false
+      source: '1774453095716'
+      sourceHandle: '1774454919886'
+      target: llm
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: knowledge-retrieval
+        targetType: template-transform
+      id: 1774455623829-source-1774488264884-target
+      source: '1774455623829'
+      sourceHandle: source
+      target: '1774488264884'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: template-transform
+        targetType: llm
+      id: 1774488264884-source-llm-target
+      source: '1774488264884'
+      sourceHandle: source
+      target: llm
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        selected: true
+        title: 用户输入
+        type: start
+        variables: []
+      height: 73
+      id: '1774451843859'
+      position:
+        x: 80
+        y: 282.52364706879484
+      positionAbsolute:
+        x: 80
+        y: 282.52364706879484
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        memory:
+          query_prompt_template: '{{#sys.query#}}
+
+
+            {{#sys.files#}}
+
+            {{#1774488264884.output#}}'
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: false
+            size: 10
+        model:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: gemini-3-flash-preview:latest
+          provider: langgenius/ollama/ollama
+        prompt_template:
+        - id: 46feec43-41ff-4c05-8e98-db4a0da3347b
+          role: system
+          text: 你是一位集生活和学习为一体的智慧智能助手来回答我的问题
+        selected: false
+        title: LLM
+        type: llm
+        vision:
+          enabled: false
+      height: 88
+      id: llm
+      position:
+        x: 1146.7930642180113
+        y: 412.2123559824277
+      positionAbsolute:
+        x: 1146.7930642180113
+        y: 412.2123559824277
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        answer: '{{#llm.text#}}
+
+          /'
+        selected: false
+        title: 直接回复
+        type: answer
+        variables: []
+      height: 103
+      id: answer
+      position:
+        x: 1453.4820069500067
+        y: 429.2123559824277
+      positionAbsolute:
+        x: 1453.4820069500067
+        y: 429.2123559824277
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        classes:
+        - id: '1'
+          name: query_weather
+        - id: '2'
+          name: book_ticket
+        - id: '1774454912901'
+          name: chat_general
+        - id: '1774454919886'
+          name: other
+        - id: '1774455465853'
+          name: Machine_Learning
+        - id: '1774455597276'
+          name: Large_Model
+        instruction: 分析用户的输入，判断其意图属于以下哪一类。如果用户提到‘天气’、‘气温’归为查天气；提到‘买票’、‘航班’归为订票
+        instructions: ''
+        model:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: gemini-3-flash-preview:latest
+          provider: langgenius/ollama/ollama
+        query_variable_selector:
+        - '1774451843859'
+        - sys.query
+        selected: false
+        title: 问题分类器
+        type: question-classifier
+        vision:
+          enabled: false
+      height: 322
+      id: '1774453095716'
+      position:
+        x: 369.1155252437549
+        y: 383.01093612101374
+      positionAbsolute:
+        x: 369.1155252437549
+        y: 383.01093612101374
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        dataset_ids:
+        - kjjhSUmPMapvq41SixhpMYLAbbO3IJCDlcpXdDy1TMxNG8arJuNEqczz1li9Dmrx
+        multiple_retrieval_config:
+          reranking_enable: false
+          reranking_mode: reranking_model
+          reranking_model:
+            model: gte-rerank
+            provider: langgenius/tongyi/tongyi
+          top_k: 4
+        query_attachment_selector: []
+        query_variable_selector:
+        - '1774451843859'
+        - sys.query
+        retrieval_mode: multiple
+        selected: false
+        title: 知识检索
+        type: knowledge-retrieval
+      height: 90
+      id: '1774455623829'
+      position:
+        x: 791.2320069500067
+        y: 550.9623559824277
+      positionAbsolute:
+        x: 791.2320069500067
+        y: 550.9623559824277
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        selected: false
+        template: "## 检索结果\r\n- 知识库{{ result }}"
+        title: 模板转换
+        type: template-transform
+        variables:
+        - value_selector:
+          - '1774455623829'
+          - result
+          value_type: array[object]
+          variable: result
+      height: 52
+      id: '1774488264884'
+      position:
+        x: 1104.2320069500067
+        y: 628.9623559824278
+      positionAbsolute:
+        x: 1104.2320069500067
+        y: 628.9623559824278
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    viewport:
+      x: 487.535986099987
+      y: -80.9247119648553
+      zoom: 1.9999999999999998
+  rag_pipeline_variables: []
