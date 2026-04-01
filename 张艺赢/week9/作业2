@@ -1,0 +1,217 @@
+from __future__ import annotations
+
+from fastapi import FastAPI
+from pydantic import BaseModel, Field
+from typing import Dict, List, Literal, Optional, Tuple
+
+app = FastAPI(
+    title="意图识别 + 双知识库 RAG Demo",
+    description="最小复现：用户提问 -> 意图识别(3类) -> (直答 / 检索机器学习库 / 检索大模型库) -> 生成回答。",
+    version="1.0.0",
+)
+
+
+Intent = Literal["general", "ml", "llm"]
+
+
+class ChatRequest(BaseModel):
+    query: str = Field(..., description="用户问题")
+    top_k: int = Field(3, ge=1, le=10, description="检索返回条数")
+
+
+class RetrievedChunk(BaseModel):
+    kb: str
+    title: str
+    content: str
+    score: float
+
+
+class ChatResponse(BaseModel):
+    intent: Intent
+    answer: str
+    retrieved: List[RetrievedChunk]
+
+
+KB_ML = "机器学习知识库"
+KB_LLM = "大模型知识库"
+
+# 这里用内置样例文档模拟“两个知识库”。
+# 你也可以把它替换成：调用 Dify 知识库检索 / ES 检索 / 向量库检索。
+KB_DOCS: Dict[str, List[Dict[str, str]]] = {
+    KB_ML: [
+        {
+            "title": "监督学习与非监督学习",
+            "content": "监督学习使用带标签数据训练模型（分类/回归）；非监督学习使用无标签数据（聚类/降维）。",
+        },
+        {
+            "title": "过拟合与正则化",
+            "content": "过拟合是模型在训练集表现好但泛化差；可用 L2/L1 正则、Dropout、早停、更多数据来缓解。",
+        },
+        {
+            "title": "评估指标",
+            "content": "分类常用准确率、精确率、召回率、F1、AUC；回归常用 MAE、MSE、RMSE、R2。",
+        },
+    ],
+    KB_LLM: [
+        {
+            "title": "Transformer 核心机制",
+            "content": "Transformer 使用自注意力机制建模序列依赖，常见模块包括多头注意力、前馈网络、残差连接与层归一化。",
+        },
+        {
+            "title": "RAG（检索增强生成）",
+            "content": "RAG 先检索外部知识片段，再把片段与问题一起交给大模型生成答案，可减少幻觉并增强可追溯性。",
+        },
+        {
+            "title": "提示词与对齐",
+            "content": "提示词工程通过系统/用户/示例约束输出；对齐常用 SFT、RLHF/DPO 等方法使模型更符合人类偏好。",
+        },
+    ],
+}
+
+
+_ML_KEYWORDS = {
+    "机器学习",
+    "监督",
+    "非监督",
+    "回归",
+    "分类",
+    "聚类",
+    "降维",
+    "过拟合",
+    "欠拟合",
+    "正则",
+    "正则化",
+    "梯度下降",
+    "损失函数",
+    "特征工程",
+    "交叉验证",
+    "AUC",
+    "F1",
+    "SVM",
+    "随机森林",
+    "XGBoost",
+}
+
+_LLM_KEYWORDS = {
+    "大模型",
+    "LLM",
+    "GPT",
+    "Transformer",
+    "注意力",
+    "自注意力",
+    "微调",
+    "SFT",
+    "RLHF",
+    "DPO",
+    "RAG",
+    "向量",
+    "Embedding",
+    "提示词",
+    "Prompt",
+    "上下文",
+}
+
+
+def detect_intent(query: str) -> Intent:
+    q = query.lower()
+
+    ml_hits = sum(1 for kw in _ML_KEYWORDS if kw.lower() in q)
+    llm_hits = sum(1 for kw in _LLM_KEYWORDS if kw.lower() in q)
+
+    if llm_hits > ml_hits and llm_hits > 0:
+        return "llm"
+    if ml_hits > 0:
+        return "ml"
+    return "general"
+
+
+def _tokenize(text: str) -> List[str]:
+    # 极简 tokenizer：按空白与常见标点切分；中文关键词依赖 substring 命中。
+    separators = "\n\t ,.;:!?()[]{}\"'“”‘’/\\|@#$%^&*-_+=<>~"
+    for ch in separators:
+        text = text.replace(ch, " ")
+    return [t for t in text.lower().split(" ") if t]
+
+
+def retrieve(kb_name: str, query: str, top_k: int) -> List[RetrievedChunk]:
+    docs = KB_DOCS.get(kb_name, [])
+    q_tokens = set(_tokenize(query))
+
+    scored: List[Tuple[float, Dict[str, str]]] = []
+    for doc in docs:
+        text = f"{doc.get('title', '')}\n{doc.get('content', '')}"
+        d_tokens = set(_tokenize(text))
+
+        # 词集合重叠率 + 中文 substring 命中加分（让演示更像“能检索到”）
+        overlap = len(q_tokens & d_tokens)
+        substring_bonus = 0
+        for kw in list(_ML_KEYWORDS) + list(_LLM_KEYWORDS):
+            if kw in query and kw in text:
+                substring_bonus += 2
+
+        score = float(overlap + substring_bonus)
+        scored.append((score, doc))
+
+    scored.sort(key=lambda x: x[0], reverse=True)
+    results: List[RetrievedChunk] = []
+    for score, doc in scored[:top_k]:
+        if score <= 0:
+            continue
+        results.append(
+            RetrievedChunk(
+                kb=kb_name,
+                title=doc.get("title", ""),
+                content=doc.get("content", ""),
+                score=score,
+            )
+        )
+    return results
+
+
+def generate_answer(intent: Intent, query: str, retrieved: List[RetrievedChunk]) -> str:
+    # 这里用“可解释的拼接式生成”模拟 LLM：
+    # - 意图1：直接回答（不检索）
+    # - 意图2/3：基于检索片段做 RAG 答复
+    if intent == "general":
+        return (
+            "（意图1：非机器学习/非大模型）\n"
+            "我将直接回答你的问题：\n\n"
+            f"问题：{query}\n\n"
+            "回答：请补充更多上下文/约束（例如目标、限制条件、使用场景），我可以给出更具体的结论与步骤。"
+        )
+
+    context = "\n\n".join(
+        f"[{i+1}] {c.kb} - {c.title}\n{c.content}" for i, c in enumerate(retrieved)
+    )
+    kb_label = "机器学习" if intent == "ml" else "大模型"
+
+    return (
+        f"（意图{2 if intent == 'ml' else 3}：{kb_label}提问，走 RAG）\n"
+        f"问题：{query}\n\n"
+        "检索到的知识片段：\n"
+        f"{context if context else '（未检索到相关片段，建议扩大top_k或补充知识库内容）'}\n\n"
+        "回答：\n"
+        "我会优先依据上面的知识片段进行回答；如果片段不足，我会明确指出并给出可验证的下一步。"
+    )
+
+
+@app.post("/chat", response_model=ChatResponse)
+async def chat(request: ChatRequest) -> ChatResponse:
+    intent = detect_intent(request.query)
+
+    retrieved: List[RetrievedChunk] = []
+    if intent == "ml":
+        retrieved = retrieve(KB_ML, request.query, request.top_k)
+    elif intent == "llm":
+        retrieved = retrieve(KB_LLM, request.query, request.top_k)
+
+    answer = generate_answer(intent, request.query, retrieved)
+    return ChatResponse(intent=intent, answer=answer, retrieved=retrieved)
+
+
+@app.get("/")
+async def root() -> Dict[str, str]:
+    return {"message": "Intent + RAG demo is running. POST /chat to use."}
+
+
+# uvicorn intent_rag_api:app --reload --port 8890 --host 0.0.0.0
