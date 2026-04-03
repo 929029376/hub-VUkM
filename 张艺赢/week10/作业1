@@ -1,0 +1,44 @@
+import argparse
+import os
+from PIL import Image
+import torch
+from transformers import CLIPModel, CLIPProcessor
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--image", required=True)
+    parser.add_argument("--labels", nargs="+", required=True)
+    parser.add_argument("--model", default="openai/clip-vit-base-patch32")
+    parser.add_argument("--device", default=None)
+    args = parser.parse_args()
+
+    if not os.path.exists(args.image):
+        raise FileNotFoundError(args.image)
+
+    device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
+
+    processor = CLIPProcessor.from_pretrained(args.model)
+    model = CLIPModel.from_pretrained(args.model)
+    model.to(device)
+    model.eval()
+
+    image = Image.open(args.image).convert("RGB")
+    texts = [f"a photo of a {label}" for label in args.labels]
+
+    inputs = processor(text=texts, images=image, return_tensors="pt", padding=True)
+    inputs = {k: v.to(device) for k, v in inputs.items()}
+
+    with torch.no_grad():
+        outputs = model(**inputs)
+        logits_per_image = outputs.logits_per_image
+        probs = logits_per_image.softmax(dim=1).squeeze(0)
+
+    ranked = sorted(zip(args.labels, probs.tolist()), key=lambda x: x[1], reverse=True)
+
+    for label, p in ranked:
+        print(f"{label}\t{p:.6f}")
+
+
+if __name__ == "__main__":
+    main()

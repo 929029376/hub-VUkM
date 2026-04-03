@@ -1,0 +1,85 @@
+import argparse
+import base64
+import os
+from openai import OpenAI
+import fitz
+
+
+def encode_file_base64(path: str) -> str:
+    with open(path, "rb") as f:
+        return base64.b64encode(f.read()).decode("utf-8")
+
+
+def pdf_first_page_to_png(pdf_path: str, out_png_path: str, zoom: float = 2.0) -> str:
+    doc = fitz.open(pdf_path)
+    page = doc[0]
+    mat = fitz.Matrix(zoom, zoom)
+    pix = page.get_pixmap(matrix=mat, alpha=False)
+    pix.save(out_png_path)
+    doc.close()
+    return out_png_path
+
+
+def call_qwen_vl(image_path: str, prompt: str, model: str, base_url: str, api_key: str) -> str:
+    client = OpenAI(api_key=api_key, base_url=base_url)
+
+    image_b64 = encode_file_base64(image_path)
+    image_url = f"data:image/png;base64,{image_b64}"
+
+    completion = client.chat.completions.create(
+        model=model,
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": prompt},
+                    {"type": "image_url", "image_url": {"url": image_url}},
+                ],
+            }
+        ],
+    )
+
+    return completion.choices[0].message.content
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--pdf", required=True)
+    parser.add_argument("--out_image", default="pdf_page1.png")
+    parser.add_argument("--zoom", type=float, default=2.0)
+    parser.add_argument("--model", default="qwen3-vl-plus")
+    parser.add_argument("--base_url", default="https://dashscope.aliyuncs.com/compatible-mode/v1")
+    parser.add_argument("--api_key", default=None)
+    parser.add_argument(
+        "--prompt",
+        default=(
+            "请解析这份PDF第一页的内容，输出：\n"
+            "1) 纯文本（尽量保留段落/标题结构）\n"
+            "2) 如果有表格，转成Markdown表格\n"
+            "3) 给出一个不超过10条的要点总结"
+        ),
+    )
+    args = parser.parse_args()
+
+    if not os.path.exists(args.pdf):
+        raise FileNotFoundError(args.pdf)
+
+    api_key = args.api_key or os.getenv("DASHSCOPE_API_KEY")
+    if not api_key:
+        raise RuntimeError("Missing DASHSCOPE_API_KEY (env) or --api_key")
+
+    pdf_first_page_to_png(args.pdf, args.out_image, zoom=args.zoom)
+
+    result = call_qwen_vl(
+        image_path=args.out_image,
+        prompt=args.prompt,
+        model=args.model,
+        base_url=args.base_url,
+        api_key=api_key,
+    )
+
+    print(result)
+
+
+if __name__ == "__main__":
+    main()
