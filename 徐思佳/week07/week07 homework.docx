@@ -1,0 +1,75 @@
+作业1: 阅读 02-joint-bert-training-only 代码，并回答以下问题：
+    ◦ bert 文本分类和 实体识别有什么关系，分别使用什么loss？
+    ◦ 多任务训练  loss = seq_loss + token_loss 有什么坏处，如果存在训练不平衡的情况，如何处理？
+作业2: 基础 02-joint-bert-training-only  中的数据集，希望你自己写一个提示词能完成任务（信息解析的智能对话系统）
+
+作业1：
+（1）文本分类和实体识别共享BERT编码层。
+输入一句文本后，先经过同一个BertModel
+BERT输出两类表示 
+pooler_output：句子级表示，用来做文本分类
+Token_output：每个token的表示，用来做实体识别
+然后分别接两个任务头：
+一个线性层做sequence classification
+一个线性层做 token classification
+句子整体语义有助于实体识别，而实体信息也能反过来帮助理解句子的意图。
+
+（2）都是用的交叉熵损失CrossEntropyLoss
+seq_loss 是对句子级 intent 分类结果计算交叉熵
+token_loss 是对 token 级实体标签计算交叉熵，只在有效位置上算，不在 padding 上算，因为代码先用 attention_mask 过滤出了 active_logits 和 active_labels。
+
+（3）
+①不同任务的损失量级可能不同，文本分类是句子级，实体识别的token级。Token级任务涉及的位置更多，训练信号更密，loss的数值规模和梯度影响可能和句子分类不一样。所以某个任务可能主导训练过程，另一个任务学的较差。
+②任务难度不同，收敛速度不同。
+意图识别更容易，而实体识别更难，直接等比例相加，可能出现，一个任务很快收敛，另一个还没学好。此时总loss不能真实反映两个任务的优化效果。
+③共享参数会导致任务冲突。
+两个任务共享一个bert编码器，一个任务更偏句子级全局语义，另一个任务更依赖局部边界信息，那么梯度方向可能并不一致，直接相加可能导致：一个任务促进的参数更新恰好对另一个任务不利。是多任务学习中常见的负迁移问题。
+④类别不平衡，样本不平衡会放大问题。
+
+（4）如果不平衡
+①加权求和，引入超参数α，β。Loss = α*seq_loss + β*token_loss，通过实验调节超参数。
+②动态调整权重：为了让两个任务在训练过程中贡献更均衡，避免某个任务压制另一个
+根据每个任务的loss变化速度动态调整权重
+利用方差不确定性（homoscedastic uncertainty）自动调节权重
+③对类别不平衡单独处理
+对intent分类使用加权交叉熵
+对NER使用：加权交叉熵，facal loss, label smoothing。
+④分阶段训练
+先训练一个主任务，再联合训练。
+先用NER训练，让模型学会实体边界，再加入intent分类做联合训练
+或者先让模型学会句子整体意图，在联合优化槽位
+
+2.你是一个中文信息解析助手。你的任务是把用户输入的一句话解析成结构化结果，用于智能对话系统的后续执行。
+
+请你完成以下三项任务：
+1. 判断该句子的领域 domain
+2. 判断该句子的意图 intent
+3. 从原句中抽取槽位 slots
+
+【领域 domain 候选集合】
+music, app, radio, lottery, stock, novel, weather, match, map, website, news, message, contacts, translation, tvchannel, cinemas, cookbook, joke, riddle, telephone, video, train, poetry, flight, epg, health, email, bus, story
+
+【意图 intent 候选集合】
+OPEN, SEARCH, REPLAY_ALL, NUMBER_QUERY, DIAL, CLOSEPRICE_QUERY, SEND, LAUNCH, PLAY, REPLY, RISERATE_QUERY, DOWNLOAD, QUERY, LOOK_BACK, CREATE, FORWARD, DATE_QUERY, SENDCONTACTS, DEFAULT, TRANSLATION, VIEW, NaN, ROUTE, POSITION
+
+【槽位 slots 候选集合】
+code, Src, startDate_dateOrig, film, endLoc_city, artistRole, location_country, location_area, author, startLoc_city, season, dishNamet, media, datetime_date, episode, teleOperator, questionWord, receiver, ingredient, name, startDate_time, startDate_date, location_province, endLoc_poi, artist, dynasty, area, location_poi, relIssue, Dest, content, keyword, target, startLoc_area, tvchannel, type, song, queryField, awayName, headNum, homeName, decade, payment, popularity, tag, startLoc_poi, date, startLoc_province, endLoc_province, location_city, absIssue, utensil, scoreDescr, dishName, endLoc_area, resolution, yesterday, timeDescr, category, subfocus, theatre, datetime_time
+
+【输出要求】
+- 只输出一个 JSON
+- 不要输出解释
+- slots 中的 value 必须来自用户原句，尽量保持原文片段
+- 如果没有槽位，就输出空对象 {}
+- 不要编造不在原句中的内容
+- domain、intent、slots 的 key 必须严格使用上面的候选标签
+
+输出格式如下：
+{
+  "domain": "",
+  "intent": "",
+  "slots": {
+  }
+}
+
+下面是用户输入：
+{用户输入}
