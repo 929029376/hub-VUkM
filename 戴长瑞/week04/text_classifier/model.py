@@ -11,9 +11,9 @@ class BertClassifier(nn.Module):
         self.bert = BertModel.from_pretrained(Config.model_path)
 
         # 2：更精确控制
-        # config = BertConfig.from_pretrained(Config.model_path)
-        # config.output_hidden_states = True  # 隐藏状态
-        # self.bert = BertModel.from_pretrained(Config.model_path, config=config)
+        # appconfig = BertConfig.from_pretrained(Config.model_path)
+        # appconfig.output_hidden_states = True  # 隐藏状态
+        # self.bert = BertModel.from_pretrained(Config.model_path, appconfig=appconfig)
 
         self.drop = nn.Dropout(p=0.3)
 
@@ -21,7 +21,7 @@ class BertClassifier(nn.Module):
         self.fc = nn.Linear(self.bert.config.hidden_size, n_classes)
 
         # 2：添加额外的全连接层
-        # self.fc1 = nn.Linear(self.bert.config.hidden_size, 256)
+        # self.fc1 = nn.Linear(self.bert.appconfig.hidden_size, 256)
         # self.relu = nn.ReLU()
         # self.fc2 = nn.Linear(256, n_classes)
 

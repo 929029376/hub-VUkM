@@ -2,7 +2,7 @@ import requests
 import base64
 import json
 
-api_key = "sk-baaac69e65543658466dc1bcfec3233"
+api_key = "sk-b872dc69e65543658466dc1bcfec3233"
 url = "https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation"
 
 def encode_image(image_path, max_size_mb=5):

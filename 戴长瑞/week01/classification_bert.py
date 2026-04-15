@@ -38,7 +38,7 @@ class Config:
     @classmethod
     def check_bert_model(cls):
         """检查BERT模型文件是否存在"""
-        required_files = ['config.json', 'pytorch_model.bin', 'vocab.txt']
+        required_files = ['appconfig.json', 'pytorch_model.bin', 'vocab.txt']
         for file in required_files:
             file_path = os.path.join(cls.BERT_PATH, file)
             if not os.path.exists(file_path):
@@ -464,7 +464,7 @@ class SimpleBERTTextClassifier:
                                                                                      'classes_') else [],
             'label_encoder_fitted': True,
             'tokenizer_vocab': dict(self.tokenizer.vocab),
-            'config': {
+            'appconfig': {
                 'bert_path': self.bert_path,
                 'num_classes': len(self.label_encoder.classes_) if hasattr(self.label_encoder, 'classes_') else 0,
                 'max_length': Config.MAX_LENGTH,
@@ -493,7 +493,7 @@ class SimpleBERTTextClassifier:
         self.label_encoder = save_data['label_encoder']
 
         # 创建并加载模型
-        num_classes = save_data['config']['num_classes']
+        num_classes = save_data['appconfig']['num_classes']
         vocab_size = len(vocab)
 
         self.model = SimpleBERTClassifier(
