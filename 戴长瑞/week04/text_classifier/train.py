@@ -243,7 +243,7 @@ def train():
                     'optimizer_state_dict': optimizer.state_dict(),
                     'val_accuracy': val_acc,
                     'train_accuracy': train_acc,
-                    'config': {
+                    'appconfig': {
                         'num_classes': Config.num_classes,
                         'hidden_size': model.bert.config.hidden_size,
                         'model_path': Config.model_path,

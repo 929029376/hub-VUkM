@@ -110,8 +110,8 @@ class BERTTextClassifier:
             checkpoint = torch.load(self.model_path, map_location=self.device)
 
             # 获取实际类别数
-            if 'config' in checkpoint:
-                checkpoint_num_classes = checkpoint['config'].get('num_classes')
+            if 'appconfig' in checkpoint:
+                checkpoint_num_classes = checkpoint['appconfig'].get('num_classes')
                 if checkpoint_num_classes is not None:
                     self.num_classes = checkpoint_num_classes
 
