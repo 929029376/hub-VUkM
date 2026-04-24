@@ -1,0 +1,49 @@
+前后端分离
+在这个项目里，前端和后端是两个独立模块：
+
+前端：demo/ 下的 Streamlit 页面，负责页面导航、聊天框、按钮、图表展示等 UI。比如 demo/streamlit_demo.py 组织页面，demo/chat/chat.py 负责聊天页面。
+后端：main_server.py 启动 FastAPI，挂载 /v1/users、/v1/chat、/stock 等接口，真正处理登录、对话、股票数据、Agent 调用、数据库读写。
+前端不直接操作数据库、不直接调用大模型，而是通过 HTTP 请求后端。例如聊天页面会请求：
+requests.post("http://127.0.0.1:8000/v1/chat/", json=data, stream=True)
+
+  
+后端 /v1/chat/ 返回 StreamingResponse，用 SSE 流式把大模型输出传回前端。所以“前后端分离”就是：页面展示和用户交互放前端，业务逻辑、数据存储、大模型调用放后端，中间通过 API 通信。
+
+
+
+历史对话如何存储
+项目里历史对话有两套存储：
+
+业务展示用：./assert/sever.db
+ORM 定义在 models/orm.py：
+
+chat_session：存一次会话的元信息，比如 user_id、session_id、title、start_time
+chat_message：存每条消息，比如 chat_id、role、content、create_time
+对应代码里：
+
+init_chat_session() 创建会话并写入初始 system message
+append_message2db() 把用户消息和助手回复写入 chat_message
+get_chat_sessions() 按 session_id 查询历史消息
+list_chat() 查询某个用户的历史会话列表
+前端的“对话历史”页面通过 /v1/chat/list 拉会话列表，通过 /v1/chat/get?session_id=... 拉某次会话里的消息。
+
+Agent 上下文用：./assert/conversations.db
+后端聊天服务里创建了：
+session = AdvancedSQLiteSession(
+    session_id=session_id,
+    db_path="./assert/conversations.db",
+    create_tables=True
+)
+  
+然后调用大模型时传入：
+Runner.run_streamed(agent, input=content, session=session)
+
+
+历史对话如何作为下一次大模型输入
+当前代码不是手动拼 messages = [...]，而是交给 OpenAI Agents 的 session 机制处理：
+
+前端保存当前 session_id
+用户再次输入时，前端把 session_id 和 content 一起发给 /v1/chat/
+后端用这个 session_id 创建 AdvancedSQLiteSession
+调用 Runner.run_streamed(..., input=content, session=session)
+Agents 框架自动从 conversations.db 读取同一会话的历史，再连同本次 input 一起送入大模型
